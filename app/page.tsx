@@ -5,6 +5,136 @@ import { ParallelLife, ChatMessage, MeetingCatalyst } from "@/lib/types";
 
 type Tab = "ledger" | "interview" | "roleplay" | "simulation" | "catalyst";
 
+function ApiKeySection({
+  apiKey,
+  setApiKey,
+  model,
+  setModel,
+}: {
+  apiKey: string;
+  setApiKey: (k: string) => void;
+  model: string;
+  setModel: (m: string) => void;
+}) {
+  const [showKey, setShowKey] = useState(false);
+
+  return (
+    <div style={{
+      background: apiKey ? "linear-gradient(135deg, #13131a 0%, #1a1a28 100%)" : "linear-gradient(135deg, #1a1010 0%, #1a1218 100%)",
+      border: apiKey ? "1px solid #34d39944" : "1px solid #f8717144",
+      borderRadius: 14,
+      padding: "1rem 1.25rem",
+      marginBottom: "1.5rem",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.75rem",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+        {/* Key icon + status */}
+        <span style={{
+          fontSize: "1.1rem",
+          flexShrink: 0,
+        }}>
+          {apiKey ? "🔑" : "⚠️"}
+        </span>
+
+        {/* Label */}
+        <span style={{
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          color: apiKey ? "var(--green)" : "var(--red)",
+          whiteSpace: "nowrap",
+        }}>
+          {apiKey ? "DeepSeek API Key — configured" : "DeepSeek API Key required"}
+        </span>
+
+        {/* Key input */}
+        <input
+          type={showKey ? "text" : "password"}
+          placeholder="Paste your DeepSeek API key (sk-...)"
+          value={apiKey}
+          onChange={e => setApiKey(e.target.value)}
+          style={{
+            flex: 1,
+            minWidth: 220,
+            background: "var(--surface2)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            padding: "0.6rem 0.85rem",
+            fontSize: "0.85rem",
+            fontFamily: "monospace",
+          }}
+        />
+
+        {/* Show/hide toggle */}
+        <button
+          type="button"
+          onClick={() => setShowKey(!showKey)}
+          title={showKey ? "Hide key" : "Show key"}
+          style={{
+            background: "var(--surface2)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            padding: "0.5rem 0.65rem",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+            color: "var(--text-muted)",
+            flexShrink: 0,
+          }}
+        >
+          {showKey ? "🙈" : "👁️"}
+        </button>
+
+        {/* Clear button */}
+        {apiKey && (
+          <button
+            type="button"
+            onClick={() => { setApiKey(""); setShowKey(false); }}
+            title="Remove key"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--red)",
+              borderRadius: 8,
+              padding: "0.5rem 0.75rem",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              color: "var(--red)",
+              flexShrink: 0,
+              fontWeight: 500,
+            }}
+          >
+            ✕ Clear
+          </button>
+        )}
+      </div>
+
+      {/* Model selector row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+        <span>🧠 Model:</span>
+        <select
+          value={model}
+          onChange={e => setModel(e.target.value)}
+          style={{
+            width: "auto",
+            minWidth: 170,
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.85rem",
+          }}
+        >
+          <option value="deepseek-chat">DeepSeek V3 (fast &amp; capable)</option>
+          <option value="deepseek-reasoner">DeepSeek R1 (deep reasoning)</option>
+        </select>
+        <span style={{ marginLeft: "auto", fontSize: "0.75rem", opacity: 0.7 }}>
+          Get a key at{" "}
+          <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener" style={{ color: "var(--accent3)" }}>
+            platform.deepseek.com
+          </a>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   // Core state
   const [apiKey, setApiKey] = useState("");
@@ -232,23 +362,12 @@ export default function Home() {
       </header>
 
       {/* API Key + Model */}
-      <div className="api-key-section">
-        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>🔑 DeepSeek Key</span>
-        <input
-          type="password"
-          placeholder="sk-..."
-          value={apiKey}
-          onChange={e => saveApiKey(e.target.value)}
-        />
-        <select
-          value={model}
-          onChange={e => saveModel(e.target.value)}
-          style={{ width: "auto", minWidth: 180, flexShrink: 0 }}
-        >
-          <option value="deepseek-chat">DeepSeek V3</option>
-          <option value="deepseek-reasoner">DeepSeek R1</option>
-        </select>
-      </div>
+      <ApiKeySection
+        apiKey={apiKey}
+        setApiKey={saveApiKey}
+        model={model}
+        setModel={saveModel}
+      />
 
       {/* Identity Seed */}
       <div className="card" style={{ marginBottom: "1.5rem" }}>
