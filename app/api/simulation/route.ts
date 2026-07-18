@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getLife } from "@/lib/store";
+import { getLife, saveSimulationLog } from "@/lib/store";
 import { ParallelLife } from "@/lib/types";
+import { v4 as uuid } from "uuid";
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,6 +66,9 @@ Write in third person past tense. Make it feel like a passage from a contemporar
     });
 
     const story = completion.choices[0]?.message?.content || "The two lives drifted past each other like ships in the night, never quite intersecting.";
+
+    // Persist the simulation log
+    saveSimulationLog(uuid(), lifeIdA, lifeIdB, story, scenario?.trim() || undefined);
 
     return NextResponse.json({ story });
   } catch (err: any) {

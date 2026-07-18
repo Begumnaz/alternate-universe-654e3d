@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getLife } from "@/lib/store";
+import { getLife, saveMeetingCatalyst } from "@/lib/store";
+import { v4 as uuid } from "uuid";
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,6 +69,9 @@ Make it feel doable, not intimidating. The goal is small real-world experimentat
     } catch {
       return NextResponse.json({ error: "Failed to parse catalyst. Try again.", raw }, { status: 500 });
     }
+
+    // Persist the catalyst
+    saveMeetingCatalyst(uuid(), lifeId, parsed);
 
     return NextResponse.json({ catalyst: parsed });
   } catch (err: any) {

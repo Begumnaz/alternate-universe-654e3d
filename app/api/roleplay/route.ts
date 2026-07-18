@@ -56,9 +56,6 @@ Write in second person ("You are standing..."). Keep it to about 150-200 words. 
       const sceneContext = completion.choices[0]?.message?.content || "You find yourself in an ordinary moment. What do you do?";
       const session = createRoleplaySession(lifeId, sceneContext);
 
-      const gmMsg: ChatMessage = { role: "gm", content: sceneContext };
-      appendRoleplayMessage(lifeId, gmMsg);
-
       return NextResponse.json({ sceneContext, messages: session.messages });
     }
 
