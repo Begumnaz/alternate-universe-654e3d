@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lifeIdA, lifeIdB, scenario, apiKey } = await req.json();
+    const { lifeIdA, lifeIdB, scenario, apiKey, model = "deepseek-chat" } = await req.json();
 
     if (!lifeIdA || !lifeIdB) {
       return NextResponse.json({ error: "Both lifeIdA and lifeIdB are required." }, { status: 400 });
@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "One or both life profiles not found." }, { status: 404 });
     }
 
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
     if (!key) {
-      return NextResponse.json({ error: "OpenAI API key is required." }, { status: 400 });
+      return NextResponse.json({ error: "DeepSeek API key is required." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: key });
+    const openai = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
 
     const profileSummary = (life: ParallelLife, label: string) => `
 ${label}:
@@ -59,7 +59,7 @@ Write a rich, literary scene (300-500 words) that:
 Write in third person past tense. Make it feel like a passage from a contemporary literary novel. Don't label the characters A and B — use their actual names or refer to them naturally.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.9,
       max_tokens: 1500,

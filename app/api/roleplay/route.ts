@@ -5,7 +5,7 @@ import { ChatMessage } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lifeId, action, message, apiKey } = await req.json();
+    const { lifeId, action, message, apiKey, model = "deepseek-chat" } = await req.json();
 
     if (!lifeId) {
       return NextResponse.json({ error: "lifeId is required." }, { status: 400 });
@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Life profile not found." }, { status: 404 });
     }
 
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
     if (!key) {
-      return NextResponse.json({ error: "OpenAI API key is required." }, { status: 400 });
+      return NextResponse.json({ error: "DeepSeek API key is required." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: key });
+    const openai = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
 
     // "start" — generate a scene and begin roleplay
     if (action === "start") {
@@ -47,7 +47,7 @@ Generate a scene that:
 Write in second person ("You are standing..."). Keep it to about 150-200 words. Make it feel literary and real.`;
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model,
         messages: [{ role: "user", content: scenePrompt }],
         temperature: 0.85,
         max_tokens: 500,
@@ -102,7 +102,7 @@ RULES:
       ];
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model,
         messages,
         temperature: 0.85,
         max_tokens: 500,

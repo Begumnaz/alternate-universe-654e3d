@@ -5,7 +5,7 @@ import { ChatMessage } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lifeId, message, apiKey } = await req.json();
+    const { lifeId, message, apiKey, model = "deepseek-chat" } = await req.json();
 
     if (!lifeId || !message?.trim()) {
       return NextResponse.json({ error: "lifeId and message are required." }, { status: 400 });
@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Life profile not found. Please generate a life first." }, { status: 404 });
     }
 
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
     if (!key) {
-      return NextResponse.json({ error: "OpenAI API key is required." }, { status: 400 });
+      return NextResponse.json({ error: "DeepSeek API key is required." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: key });
+    const openai = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
 
     // Build the system prompt from the Life Ledger
     const lifeContext = `
@@ -60,7 +60,7 @@ IMPORTANT: Be consistent with the above facts. If the user asks about something 
     ];
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages,
       temperature: 0.8,
       max_tokens: 600,
@@ -73,7 +73,7 @@ IMPORTANT: Be consistent with the above facts. If the user asks about something 
 
     // Extract any new details mentioned and store them
     const detailExtraction = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: "Extract any new factual details about the character's life from this response. Output ONLY a JSON object of key-value pairs. If no new details, output {}." },
         { role: "user", content: reply },

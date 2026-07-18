@@ -8,6 +8,7 @@ type Tab = "ledger" | "interview" | "roleplay" | "simulation" | "catalyst";
 export default function Home() {
   // Core state
   const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("deepseek-chat");
   const [basePersonality, setBasePersonality] = useState("");
   const [life, setLife] = useState<ParallelLife | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,15 +41,22 @@ export default function Home() {
   const interviewEndRef = useRef<HTMLDivElement>(null);
   const rpEndRef = useRef<HTMLDivElement>(null);
 
-  // Load API key from localStorage on mount
+  // Load API key + model from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("au_api_key");
-    if (saved) setApiKey(saved);
+    const savedKey = localStorage.getItem("au_deepseek_key");
+    if (savedKey) setApiKey(savedKey);
+    const savedModel = localStorage.getItem("au_deepseek_model");
+    if (savedModel) setModel(savedModel);
   }, []);
 
   const saveApiKey = (key: string) => {
     setApiKey(key);
-    localStorage.setItem("au_api_key", key);
+    localStorage.setItem("au_deepseek_key", key);
+  };
+
+  const saveModel = (m: string) => {
+    setModel(m);
+    localStorage.setItem("au_deepseek_model", m);
   };
 
   // Auto-scroll chat
@@ -78,7 +86,7 @@ export default function Home() {
       const res = await fetch("/api/generate-life", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ basePersonality, apiKey }),
+        body: JSON.stringify({ basePersonality, apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate life.");
@@ -106,7 +114,7 @@ export default function Home() {
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lifeId: life.id, message: msg, apiKey }),
+        body: JSON.stringify({ lifeId: life.id, message: msg, apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Interview failed.");
@@ -127,7 +135,7 @@ export default function Home() {
       const res = await fetch("/api/roleplay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lifeId: life.id, action: "start", apiKey }),
+        body: JSON.stringify({ lifeId: life.id, action: "start", apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Roleplay start failed.");
@@ -149,7 +157,7 @@ export default function Home() {
       const res = await fetch("/api/roleplay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lifeId: life.id, action: "act", message: msg, apiKey }),
+        body: JSON.stringify({ lifeId: life.id, action: "act", message: msg, apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Action failed.");
@@ -174,7 +182,7 @@ export default function Home() {
       const res = await fetch("/api/simulation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lifeIdA: simLifeA, lifeIdB: simLifeB, scenario: simScenario, apiKey }),
+        body: JSON.stringify({ lifeIdA: simLifeA, lifeIdB: simLifeB, scenario: simScenario, apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Simulation failed.");
@@ -195,7 +203,7 @@ export default function Home() {
       const res = await fetch("/api/meeting-catalyst", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lifeId: life.id, apiKey }),
+        body: JSON.stringify({ lifeId: life.id, apiKey, model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Catalyst generation failed.");
@@ -223,15 +231,23 @@ export default function Home() {
         </p>
       </header>
 
-      {/* API Key */}
+      {/* API Key + Model */}
       <div className="api-key-section">
-        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>🔑 OpenAI Key</span>
+        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>🔑 DeepSeek Key</span>
         <input
           type="password"
           placeholder="sk-..."
           value={apiKey}
           onChange={e => saveApiKey(e.target.value)}
         />
+        <select
+          value={model}
+          onChange={e => saveModel(e.target.value)}
+          style={{ width: "auto", minWidth: 180, flexShrink: 0 }}
+        >
+          <option value="deepseek-chat">DeepSeek V3</option>
+          <option value="deepseek-reasoner">DeepSeek R1</option>
+        </select>
       </div>
 
       {/* Identity Seed */}

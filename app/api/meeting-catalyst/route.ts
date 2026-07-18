@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 
 export async function POST(req: NextRequest) {
   try {
-    const { lifeId, apiKey } = await req.json();
+    const { lifeId, apiKey, model = "deepseek-chat" } = await req.json();
 
     if (!lifeId) {
       return NextResponse.json({ error: "lifeId is required." }, { status: 400 });
@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Life profile not found." }, { status: 404 });
     }
 
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
     if (!key) {
-      return NextResponse.json({ error: "OpenAI API key is required." }, { status: 400 });
+      return NextResponse.json({ error: "DeepSeek API key is required." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: key });
+    const openai = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
 
     const prompt = `You are a creative coach helping someone bring their parallel-life character into the real world. Based on this character's profile, generate a "Meeting Catalyst" — a specific, actionable scenario for how this person could embody their parallel self in real life and potentially meet someone (a friend, stranger, or another parallel-life player).
 
@@ -47,7 +47,7 @@ Respond in STRICT JSON format:
 Make it feel doable, not intimidating. The goal is small real-world experimentation, not performance.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: "You output ONLY valid JSON, no markdown, no backticks." },
         { role: "user", content: prompt }

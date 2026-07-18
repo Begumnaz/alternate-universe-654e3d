@@ -6,18 +6,18 @@ import { saveLife } from "@/lib/store";
 
 export async function POST(req: NextRequest) {
   try {
-    const { basePersonality, apiKey } = await req.json();
+    const { basePersonality, apiKey, model = "deepseek-chat" } = await req.json();
 
     if (!basePersonality || typeof basePersonality !== "string" || basePersonality.trim().length < 10) {
       return NextResponse.json({ error: "Please provide a base personality description (at least 10 characters)." }, { status: 400 });
     }
 
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || process.env.DEEPSEEK_API_KEY;
     if (!key) {
-      return NextResponse.json({ error: "OpenAI API key is required. Set it in your environment or provide it in the request." }, { status: 400 });
+      return NextResponse.json({ error: "DeepSeek API key is required. Set it in your environment or provide it in the request." }, { status: 400 });
     }
 
-    const openai = new OpenAI({ apiKey: key });
+    const openai = new OpenAI({ apiKey: key, baseURL: "https://api.deepseek.com" });
 
     const prompt = `You are a master of deep, realistic character generation. Create a "Parallel Life" profile for a person based on their core personality traits.
 
@@ -57,7 +57,7 @@ CRITICAL RULES:
 - Avoid glamour. No spies, no CEOs, no lottery winners. Think real people.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model,
       messages: [
         { role: "system", content: "You are a character generator. You output ONLY valid JSON, no markdown, no backticks, no commentary." },
         { role: "user", content: prompt }
